@@ -1,0 +1,6 @@
+@GjettLataBackend_HostAddress = http://localhost:5188
+
+GET {{GjettLataBackend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
