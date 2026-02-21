@@ -10,15 +10,16 @@ builder.Services.AddSignalR();
 
 builder.Services.AddControllers();
 
-var allowedOrigin = builder.Configuration["CORS_ORIGIN"];
+var origins = builder.Configuration["CORS_ORIGINS"]?
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        if (!string.IsNullOrEmpty(allowedOrigin))
+        if (origins != null && origins.Length > 0)
         {
-            policy.WithOrigins(allowedOrigin)
+            policy.WithOrigins(origins)
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
