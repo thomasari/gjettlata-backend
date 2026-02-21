@@ -4,7 +4,7 @@ using GjettLataBackend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<RoomManager>();
-builder.Services.AddSingleton<SpotifyService>();
+builder.Services.AddScoped<SpotifyService>();
 builder.Services.AddHttpClient<DeezerService>();
 builder.Services.AddSignalR();
 

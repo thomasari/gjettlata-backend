@@ -34,3 +34,4 @@
 /Users/thomas/code/GjettLataBackend/bin/Debug/net10.0/Nanoid.dll
 /Users/thomas/code/GjettLataBackend/bin/Debug/net10.0/Newtonsoft.Json.dll
 /Users/thomas/code/GjettLataBackend/bin/Debug/net10.0/SpotifyAPI.Web.dll
+/Users/thomas/code/GjettLataBackend/obj/Debug/net10.0/GjettLataBackend.sourcelink.json
