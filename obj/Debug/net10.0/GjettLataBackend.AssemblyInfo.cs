@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("926316cd-9466-467c-9739-7ee10efbaf40")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+875707a12bb9b2daecf189ab6af81de79418d37f")]
 [assembly: System.Reflection.AssemblyProductAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
