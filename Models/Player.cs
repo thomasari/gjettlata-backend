@@ -6,7 +6,7 @@ public class Player
     {
         Id = "SYSTEM",
         Name = "",
-        Color = "#b0b0b0",
+        Color = "#999",
         Score = 0
     };
     public string Id { get; set; } = Guid.NewGuid().ToString();

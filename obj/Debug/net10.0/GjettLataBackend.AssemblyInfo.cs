@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8916b045c2e507cd08e2f275f5d36de989e7dfdc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a02cf3425408a83b0ac75761ea4ef4317b1feaa2")]
 [assembly: System.Reflection.AssemblyProductAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GjettLataBackend")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

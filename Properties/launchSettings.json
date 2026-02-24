@@ -9,6 +9,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "CORS_ORIGIN": "http://localhost:5173",
+        "CORS_ORIGINS": "http://localhost:5173",
         "SPOTIFY_CLIENT_ID": "f4ab0d3cced044f9959dc2cc68283bf4",
         "SPOTIFY_CLIENT_SECRET": "934dc6a939d94707ba8801a7311d8db7"
       }
@@ -21,6 +22,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "CORS_ORIGIN": "http://localhost:5173",
+        "CORS_ORIGINS": "http://localhost:5173",
         "SPOTIFY_CLIENT_ID": "f4ab0d3cced044f9959dc2cc68283bf4",
         "SPOTIFY_CLIENT_SECRET": "934dc6a939d94707ba8801a7311d8db7"
       }

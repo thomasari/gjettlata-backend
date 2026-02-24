@@ -1,3 +1,5 @@
+using GjettLataBackend.Models.DTO;
+
 namespace GjettLataBackend.Models;
 
 public class Room(string id)
@@ -13,4 +15,19 @@ public class Room(string id)
     public GameMode GameMode { get; set; } = GameMode.AllTime;
     public int CurrentRound { get; set; } = 0;
     public int MaxRounds { get; set; } = 16;
+    
+    public RoomDto ToSafeForClient()
+    {
+        return new RoomDto
+        {
+            Id = Id,
+            Players = Players,
+            Host = Host,
+            GameMode = GameMode,
+            CurrentRound = CurrentRound,
+            MaxRounds = MaxRounds,
+            GameEnded = GameEnded,
+            GameStarted = GameStarted
+        };
+    }
 }

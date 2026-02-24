@@ -1,4 +1,5 @@
 
+using System.Text.Json.Serialization;
 using GjettLataBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,9 +7,21 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<RoomManager>();
 builder.Services.AddScoped<SpotifyService>();
 builder.Services.AddHttpClient<DeezerService>();
-builder.Services.AddSignalR();
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        options.PayloadSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+        
+    });
 
 var origins = builder.Configuration["CORS_ORIGINS"]?
     .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);

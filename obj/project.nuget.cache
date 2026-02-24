@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "iwVQMdA97AE=",
+  "dgSpecHash": "7CsrdPkqIqY=",
   "success": true,
   "projectFilePath": "/Users/thomas/code/GjettLataBackend/GjettLataBackend.csproj",
   "expectedPackageFiles": [
+    "/Users/thomas/.nuget/packages/fuzzysharp/2.0.2/fuzzysharp.2.0.2.nupkg.sha512",
     "/Users/thomas/.nuget/packages/microsoft.aspnetcore.openapi/10.0.3/microsoft.aspnetcore.openapi.10.0.3.nupkg.sha512",
     "/Users/thomas/.nuget/packages/microsoft.aspnetcore.signalr.common/10.0.3/microsoft.aspnetcore.signalr.common.10.0.3.nupkg.sha512",
     "/Users/thomas/.nuget/packages/microsoft.openapi/2.0.0/microsoft.openapi.2.0.0.nupkg.sha512",

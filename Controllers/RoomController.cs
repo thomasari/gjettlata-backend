@@ -29,18 +29,15 @@ public class RoomController : ControllerBase
     {
         var roomId = await Nanoid.GenerateAsync("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890", 5);
         var room = _roomManager.CreateRoom(roomId);
-        //var tracks = await _spotifyService.GetRandomTracksFromPlaylist(PlaylistMap.GetPlaylistId(room.GameMode), room.MaxRounds);
-        //var songs = await _deezerService.GetPreviews(tracks);
-        //room.Songs.AddRange(songs);
-        
-        return Ok(room);
+
+        return Ok(room.ToSafeForClient());
     }
     
     [HttpGet("{id}")]
     public IActionResult GetRoom(string id)
     {
         var room = _roomManager.GetRoom(id);
-        return room == null ? NotFound() : Ok(room);
+        return room == null ? NotFound() : Ok(room.ToSafeForClient());
     }
     
     [HttpPost("{roomId}/join")]
@@ -61,7 +58,18 @@ public class RoomController : ControllerBase
 
         await _hub.Clients.Group(roomId).SendAsync("PlayerJoined", newPlayer); // Notify others
 
-        return Ok(new { newPlayer, room });
+        return Ok(new { newPlayer, Room = room.ToSafeForClient() });
+    }
+    
+    [HttpPost("{roomId}/gamemode")]
+    public async Task<IActionResult> SetGamemode(string roomId, [FromBody] GameMode gameMode)
+    {
+        var room = _roomManager.GetRoom(roomId);
+        if (room == null) return NotFound();
+
+        room.GameMode = gameMode;
+
+        return Ok();
     }
     
     [HttpGet("{roomId}/start")]
@@ -69,8 +77,31 @@ public class RoomController : ControllerBase
     {
         var room = _roomManager.GetRoom(roomId);
         if (room == null) return NotFound($"Room {roomId} not found");
+        
+        // Get songs
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // var tracks = await _spotifyService
+                //     .GetRandomTracksFromPlaylist(
+                //         PlaylistMap.GetPlaylistId(room.GameMode),
+                //         1012);
 
-        var countdownMessages = new[] { "Game starts in 3...", "Game starts in 2...", "Game starts in 1..." };
+                var songs = await _deezerService.GetRandomSongs(room.GameMode.ToString(), room.MaxRounds);
+
+                room.Songs.AddRange(songs);
+                
+                await _hub.Clients.Group(roomId).SendAsync("SongUpdate", songs[room.CurrentRound].ToSafeForClient());
+
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Background song loading failed: " + ex);
+            }
+        });
+
+        var countdownMessages = new[] { "Starter om 3...", "Starter om 2...", "Starter om 1..." };
 
         foreach (var msg in countdownMessages)
         {
@@ -90,12 +121,12 @@ public class RoomController : ControllerBase
 
         room.ChatHistory.Add(startMessage);
 
-        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room);
+        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room.ToSafeForClient());
 
         await _hub.Clients.Group(roomId)
             .SendAsync("ReceiveChat", startMessage.Sender, startMessage.Message, startMessage.IsSystemMessage);
 
-        return Ok(room);
+        return Ok(room.ToSafeForClient());
     }
     
     [HttpGet("{roomId}/restart")]
@@ -113,10 +144,10 @@ public class RoomController : ControllerBase
 
         room.ChatHistory.Add(systemMessage);
 
-        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room);
+        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room.ToSafeForClient());
         await _hub.Clients.Group(roomId).SendAsync("ReceiveChat", systemMessage.Sender, systemMessage.Message, systemMessage.IsSystemMessage);
 
-        return Ok(room);
+        return Ok(room.ToSafeForClient());
     }
     
     [HttpGet("{roomId}/end")]
@@ -140,7 +171,7 @@ public class RoomController : ControllerBase
             ? $"Det ble uavgjort{durationText}!"
             : $"Spillet er slutt! {leadingPlayer} vant{durationText}!");
 
-        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room);
+        await _hub.Clients.Group(roomId).SendAsync("RoomUpdate", room.ToSafeForClient());
 
         room.ChatHistory.Add(systemMessage);
 

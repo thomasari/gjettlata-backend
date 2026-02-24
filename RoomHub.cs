@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using FuzzySharp;
 using GjettLataBackend.Models;
 using Microsoft.AspNetCore.SignalR;
 
@@ -24,6 +26,54 @@ public class RoomHub : Hub
         }
     }
     
+    public async Task SendGuess(string roomId, string playerId, string message)
+    {
+        var room = _roomManager.GetRoom(roomId);
+        if (room == null) return;
+
+        var player = room.Players.Find(p => p.Id == playerId);
+        if (player == null) return;
+
+        var guessNorm = Normalize(message);
+        var answerNorm = Normalize(room.Songs[room.CurrentRound].Name);
+        
+        Console.WriteLine(guessNorm);
+        Console.WriteLine(answerNorm);
+
+        var score = Fuzz.TokenSetRatio(guessNorm, answerNorm);
+        Console.WriteLine(score);
+        Console.WriteLine("\n");
+
+        if (score >= 91)
+        {
+            player.Score++;
+            await Clients.Group(roomId).SendAsync("CorrectGuess", player.Id, player.Score);
+            await Clients.Group(roomId)
+                .SendAsync(
+                    "ReceiveChat",
+                    new Player
+                    {
+                        Id = Player.System.Id,
+                        Name = Player.System.Name,
+                        Score = Player.System.Score,
+                        Color = player.Color
+                    },
+                    $"{player.Name} gjettet riktig!",
+                    true
+                );
+            return;
+        }
+        if (score >= 70) // tolerance threshold
+        {
+            await Clients.Client(Context.ConnectionId)
+                .SendAsync("ReceiveChat", Player.System, $"\"{message}\" er nesten riktig!", true);
+            return;
+        }
+
+        await Clients.Group(roomId)
+            .SendAsync("ReceiveChat", player, message, false);
+    }
+    
     public async Task SendPlayerUpdate(string roomId, Player? playerUpdate)
     {
         var room = _roomManager.GetRoom(roomId);
@@ -45,5 +95,22 @@ public class RoomHub : Hub
         }
 
         await base.OnConnectedAsync();
+    }
+
+    private static string Normalize(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return string.Empty;
+
+        // Lowercase
+        input = input.ToLowerInvariant();
+
+        // Remove punctuation (keep letters, digits, spaces)
+        input = Regex.Replace(input, @"[^\p{L}\p{Nd}\s]", "");
+
+        // Collapse multiple spaces
+        input = Regex.Replace(input, @"\s+", " ").Trim();
+
+        return input;
     }
 }
