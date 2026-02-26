@@ -1,11 +1,13 @@
 
 using System.Text.Json.Serialization;
+using GjettLataBackend;
 using GjettLataBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<RoomManager>();
 builder.Services.AddScoped<SpotifyService>();
+builder.Services.AddScoped<GameEngineService>();
 builder.Services.AddHttpClient<DeezerService>();
 builder.Services
     .AddSignalR()

@@ -4,13 +4,13 @@ public class ChatMessage
 {
     public ChatMessage()
     {}
-    public ChatMessage(string message)
+    public ChatMessage(string message, string? color = "#b0b0b0")
     {
         Sender = new Player
         {
             Id = "System",
             Name = "System",
-            Color = "#b0b0b0",
+            Color = color ?? "#b0b0b0",
             Score = 0
         };
         IsSystemMessage = true;

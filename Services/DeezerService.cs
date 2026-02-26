@@ -1,12 +1,21 @@
 using System.Text.Json;
 using System.Net.Http.Json;
 using GjettLataBackend.Models;
-using GjettLataBackend.Models.DTO;
+
+using System.Text.Json;
+using System.Net.Http.Json;
 
 public class DeezerService
 {
     private readonly HttpClient _http;
+
+    // Genre -> list of IDs
     private readonly Dictionary<string, List<long>> _songCache;
+
+    // DeezerId -> Track metadata (cached)
+    private readonly Dictionary<long, DeezerTrackResponse> _trackCache = new();
+
+    private readonly SemaphoreSlim _lock = new(1, 1);
 
     public DeezerService(HttpClient http)
     {
@@ -14,42 +23,86 @@ public class DeezerService
         _http.BaseAddress = new Uri("https://api.deezer.com/");
 
         var json = File.ReadAllText("songCache.json");
+
         _songCache = JsonSerializer.Deserialize<
                          Dictionary<string, List<long>>>(json)
                      ?? new();
     }
 
-    public async Task<List<Song>> GetRandomSongs(string genre, int count)
+    // ============================
+    // PUBLIC API
+    // ============================
+
+    public async Task<List<Song>> GetRandomSongs(string? genre, int count)
     {
-        if (!_songCache.TryGetValue(genre, out var ids) || ids.Count == 0)
-            return new List<Song>();
+        if (genre == null ||
+            !_songCache.TryGetValue(genre, out var ids) ||
+            ids.Count == 0)
+        {
+            return new();
+        }
 
         var selectedIds = ids
             .OrderBy(_ => Random.Shared.Next())
             .Take(count)
             .ToList();
 
-        var tasks = selectedIds.Select(GetSongById);
-        var results = await Task.WhenAll(tasks);
+        var songs = new List<Song>();
 
-        return results
-            .Where(s => s != null)
-            .ToList()!;
+        foreach (var id in selectedIds)
+        {
+            var track = await GetTrack(id);
+
+            if (track == null)
+                continue;
+
+            songs.Add(new Song
+            {
+                Name = track.title_short ?? track.title,
+                DeezerId = id
+            });
+        }
+
+        return songs;
     }
 
-    private async Task<Song?> GetSongById(long id)
+    public async Task<string?> GetPreviewUrlById(long id)
     {
-        var track = await _http.GetFromJsonAsync<DeezerTrackResponse>($"track/{id}");
+        var track = await GetTrack(id);
+        return track?.preview;
+    }
 
-        if (track == null || string.IsNullOrEmpty(track.preview))
-            return null;
+    // ============================
+    // INTERNAL CACHE LOGIC
+    // ============================
 
-        return new Song
+    private async Task<DeezerTrackResponse?> GetTrack(long id)
+    {
+        if (_trackCache.TryGetValue(id, out var cached))
+            return cached;
+
+        await _lock.WaitAsync();
+
+        try
         {
-            Name = track.title_short,
-            Artists = new() { track.artist.name },
-            DeezerId = id,
-            PreviewUrl = track.preview,
-        };
+            // Double-check after lock
+            if (_trackCache.TryGetValue(id, out cached))
+                return cached;
+
+            var track =
+                await _http.GetFromJsonAsync<DeezerTrackResponse>(
+                    $"track/{id}");
+
+            if (track == null || string.IsNullOrEmpty(track.preview))
+                return null;
+
+            _trackCache[id] = track;
+
+            return track;
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
 }
