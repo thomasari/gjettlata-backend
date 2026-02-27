@@ -115,19 +115,33 @@ public class GameEngineService
 
     private void RevealLetter(Round round)
     {
-        if (round.IsFullyRevealed) return;
+        if (round.IsFullyRevealed)
+            return;
 
         var name = round.Song.Name;
 
-        var hidden = Enumerable.Range(0, name.Length)
-            .Where(i =>
-                char.IsLetterOrDigit(name[i]) &&
-                !round.RevealedIndexes.Contains(i))
+        // All revealable character indexes
+        var revealableIndexes = Enumerable.Range(0, name.Length)
+            .Where(i => char.IsLetterOrDigit(name[i]))
             .ToList();
 
-        if (!hidden.Any()) return;
+        if (!revealableIndexes.Any())
+            return;
 
-        var index = hidden[Random.Shared.Next(hidden.Count)];
+        // 🔥 Limit reveal to max 50%
+        var maxRevealCount = (int)Math.Floor(revealableIndexes.Count * 0.5);
+
+        if (round.RevealedIndexes.Count >= maxRevealCount)
+            return;
+
+        var hiddenIndexes = revealableIndexes
+            .Where(i => !round.RevealedIndexes.Contains(i))
+            .ToList();
+
+        if (!hiddenIndexes.Any())
+            return;
+
+        var index = hiddenIndexes[Random.Shared.Next(hiddenIndexes.Count)];
         round.RevealedIndexes.Add(index);
     }
 
