@@ -4,6 +4,7 @@ using GjettLataBackend.Models;
 
 using System.Text.Json;
 using System.Net.Http.Json;
+using System.Text.RegularExpressions;
 
 public class DeezerService
 {
@@ -58,12 +59,31 @@ public class DeezerService
 
             songs.Add(new Song
             {
-                Name = track.title_short ?? track.title,
+                Name = CleanTitle(track.title_short ?? track.title),
                 DeezerId = id
             });
         }
 
         return songs;
+    }
+    
+    private static string CleanTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return title;
+
+        // Remove parentheses and brackets content
+        title = Regex.Replace(title, @"\s*[\(\[].*?[\)\]]", "");
+
+        // Remove dash suffixes like " - Remastered", " - Live", etc.
+        title = Regex.Replace(title, @"\s*-\s*(live|remaster(ed)?|acoustic|version).*?$",
+            "", RegexOptions.IgnoreCase);
+
+        // Remove feat. without parentheses
+        title = Regex.Replace(title, @"\s*(feat\.?|ft\.?).*$",
+            "", RegexOptions.IgnoreCase);
+
+        return title.Trim();
     }
 
     public async Task<string?> GetPreviewUrlById(long id)
