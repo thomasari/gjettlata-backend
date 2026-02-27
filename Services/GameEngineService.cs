@@ -23,7 +23,7 @@ public class GameEngineService
         var countdown = RunCountdown(room, roomId);
         
         var songs = await _deezer.GetRandomSongs(
-            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.Rounds.Count);
+            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.TotalRounds);
 
         await countdown;
         
@@ -41,7 +41,7 @@ public class GameEngineService
     public async Task RestartGame(Room room, string roomId)
     {
         var songs = await _deezer.GetRandomSongs(
-            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.Rounds.Count);
+            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.TotalRounds);
 
         
     }
@@ -366,6 +366,7 @@ public class GameEngineService
                 StartedAt = room.CurrentGame.StartedAt,
                 Ended = room.CurrentGame.Ended,
                 CurrentRoundIndex = room.CurrentGame.CurrentRoundIndex,
+                TotalRounds = room.CurrentGame.TotalRounds,
                 CurrentRound = room.CurrentGame.CurrentRound == null
                     ? null
                     : new RoundDto
@@ -379,6 +380,7 @@ public class GameEngineService
                                 BuildMaskedName(
                                     room.CurrentGame.CurrentRound),
                         PlayerScores = room.CurrentGame.CurrentRound.PlayerScores,
+                        
                     }
             }
         };

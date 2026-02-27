@@ -15,6 +15,7 @@ public class GameDto
     public bool Ended { get; set; }
     public int CurrentRoundIndex { get; set; }
     public RoundDto? CurrentRound { get; set; }
+    public int TotalRounds { get; set; }
 }
 
 public class RoundDto

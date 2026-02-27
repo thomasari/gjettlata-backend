@@ -88,12 +88,15 @@ public class RoomController : ControllerBase
     /* ============================= */
 
     [HttpPost("{roomId}/gamemode")]
-    public IActionResult SetMode(string roomId, [FromBody] GameMode mode)
+    public async Task<IActionResult> SetMode(string roomId, [FromBody] GameMode mode)
     {
         var room = _rooms.GetRoom(roomId);
         if (room == null) return NotFound();
 
         room.CurrentGame?.GameMode = mode;
+        
+        await _hub.Clients.Group(roomId)
+            .SendAsync("RoomUpdate", _engine.ToDto(room));
 
         return Ok(_engine.ToDto(room));
     }
@@ -103,12 +106,15 @@ public class RoomController : ControllerBase
     /* ============================= */
 
     [HttpPost("{roomId}/rounds")]
-    public IActionResult SetMode(string roomId, [FromBody] int rounds)
+    public async Task<IActionResult> SetMode(string roomId, [FromBody] int rounds)
     {
         var room = _rooms.GetRoom(roomId);
         if (room == null) return NotFound();
 
-        room.CurrentGame?.Rounds = new List<Round>(rounds);
+        room.CurrentGame?.TotalRounds = rounds;
+        
+        await _hub.Clients.Group(roomId)
+            .SendAsync("RoomUpdate", _engine.ToDto(room));
 
         return Ok(_engine.ToDto(room));
     }
