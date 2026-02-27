@@ -213,7 +213,7 @@ public class GameEngineService
 
             player.Score += score;
             
-            var correctGuessMessage = new ChatMessage($"{player.Score} gjettet riktig!", player.Color);
+            var correctGuessMessage = new ChatMessage($"{player.Name} gjettet riktig!", player.Color);
             room.ChatHistory.Add(correctGuessMessage);
             
             await _hub.Clients.Group(roomId)
@@ -288,12 +288,17 @@ public class GameEngineService
     {
         var guessNorm = Normalize(guess);
         var answerNorm = Normalize(answer);
+
+        // Prevent 1–2 character spam guesses
+        if (guessNorm.Length < Math.Min(3, answerNorm.Length / 3))
+            return 0;
+
         var score = new[]
         {
             Fuzz.TokenSetRatio(guessNorm, answerNorm),
-            Fuzz.PartialRatio(guessNorm, answerNorm)
+            Fuzz.Ratio(guessNorm, answerNorm)
         }.Max();
-        
+
         return score;
     }
 

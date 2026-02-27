@@ -112,7 +112,7 @@ public class RoomController : ControllerBase
             room.CurrentGame = new Game();
         }
 
-        await _engine.StartGame(room, roomId, 16);
+        await _engine.StartGame(room, roomId, 1);
 
         return Ok(_engine.ToDto(room));
     }
