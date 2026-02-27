@@ -4,6 +4,7 @@ using GjettLataBackend.Models;
 using GjettLataBackend.Services;
 using Microsoft.AspNetCore.SignalR;
 using NanoidDotNet;
+using static System.Int32;
 
 [ApiController]
 [Route("room")]
@@ -73,7 +74,7 @@ public class RoomController : ControllerBase
         await _hub.Clients.All.SendAsync("ReceiveChat", player, message, true);
         
         await _hub.Clients.Group(roomId)
-            .SendAsync("RoomState", _engine.ToDto(room));
+            .SendAsync("RoomUpdate", _engine.ToDto(room));
 
         return Ok(new
         {
@@ -96,6 +97,21 @@ public class RoomController : ControllerBase
 
         return Ok(_engine.ToDto(room));
     }
+    
+    /* ============================= */
+    /* SET GAMEMODE */
+    /* ============================= */
+
+    [HttpPost("{roomId}/rounds")]
+    public IActionResult SetMode(string roomId, [FromBody] int rounds)
+    {
+        var room = _rooms.GetRoom(roomId);
+        if (room == null) return NotFound();
+
+        room.CurrentGame?.Rounds = new List<Round>(rounds);
+
+        return Ok(_engine.ToDto(room));
+    }
 
     /* ============================= */
     /* START GAME */
@@ -112,7 +128,24 @@ public class RoomController : ControllerBase
             room.CurrentGame = new Game();
         }
 
-        await _engine.StartGame(room, roomId, 1);
+        await _engine.StartGame(room, roomId);
+
+        return Ok(_engine.ToDto(room));
+    }
+    
+    /* ============================= */
+    /* RESTART GAME */
+    /* ============================= */
+
+    [HttpPost("{roomId}/restart")]
+    public async Task<IActionResult> Restart(string roomId)
+    {
+        var room = _rooms.GetRoom(roomId);
+        if (room == null) return NotFound();
+        
+        room.CurrentGame = new Game();
+
+        await _engine.StartGame(room, roomId);
 
         return Ok(_engine.ToDto(room));
     }

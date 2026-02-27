@@ -18,12 +18,12 @@ public class GameEngineService
         _deezer = deezer;
     }
 
-    public async Task StartGame(Room room, string roomId, int rounds)
+    public async Task StartGame(Room room, string roomId)
     {
         var countdown = RunCountdown(room, roomId);
         
         var songs = await _deezer.GetRandomSongs(
-            room.CurrentGame!.GameMode.ToString(), rounds);
+            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.Rounds.Count);
 
         await countdown;
         
@@ -35,6 +35,15 @@ public class GameEngineService
         }).ToList();
 
         await StartRound(room, roomId);
+    }
+
+
+    public async Task RestartGame(Room room, string roomId)
+    {
+        var songs = await _deezer.GetRandomSongs(
+            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.Rounds.Count);
+
+        
     }
 
     private async Task StartRound(Room room, string roomId)
@@ -144,8 +153,26 @@ public class GameEngineService
         _ = RunIntermission(room, roomId);
     }
     
+    
     private async Task RunIntermission(Room room, string roomId)
     {
+        if (room.CurrentGame.CurrentRoundIndex+1 >= room.CurrentGame.Rounds.Count)
+        {
+            var chat = new ChatMessage($"Sangen var {room.CurrentGame.CurrentRound.Song.Name}!");
+            room.ChatHistory.Add(chat);
+
+            await _hub.Clients.Group(roomId)
+                .SendAsync("ReceiveChat", chat.Sender, chat.Message, true);
+            
+            room.CurrentGame.Ended = true;
+            room.CurrentGame!.CurrentRoundIndex++;
+
+            await _hub.Clients.Group(roomId)
+                .SendAsync("GameEnded", ToDto(room));
+
+            return;
+        }
+        
         var messages = new[]
         {
             $"Sangen var {room.CurrentGame.CurrentRound.Song.Name}!",
@@ -166,18 +193,8 @@ public class GameEngineService
 
             await Task.Delay(1000);
         }
-
+        
         room.CurrentGame!.CurrentRoundIndex++;
-
-        if (room.CurrentGame.CurrentRoundIndex >= room.CurrentGame.Rounds.Count)
-        {
-            room.CurrentGame.Ended = true;
-
-            await _hub.Clients.Group(roomId)
-                .SendAsync("GameEnded", ToDto(room));
-
-            return;
-        }
 
         await StartRound(room, roomId);
     }
