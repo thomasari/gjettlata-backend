@@ -149,9 +149,17 @@ public class RoomController : ControllerBase
         var room = _rooms.GetRoom(roomId);
         if (room == null) return NotFound();
         
+        var totalRounds = room.CurrentGame.TotalRounds;
+        var gameMode = room.CurrentGame.GameMode;
+        
         room.CurrentGame = new Game();
-
-        await _engine.StartGame(room, roomId);
+        room.CurrentGame.TotalRounds = totalRounds;
+        room.CurrentGame.GameMode = gameMode;
+        
+        room.Players.ForEach(p => p.Score = 0);
+        
+        await _hub.Clients.Group(roomId)
+            .SendAsync("RoomUpdate", _engine.ToDto(room));
 
         return Ok(_engine.ToDto(room));
     }

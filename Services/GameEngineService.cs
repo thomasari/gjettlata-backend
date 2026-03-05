@@ -49,8 +49,8 @@ public class GameEngineService
     private async Task StartRound(Room room, string roomId)
     {
         var round = room.CurrentGame!.CurrentRound!;
-        round.StartedAt = DateTimeOffset.UtcNow.AddSeconds(3);
-        round.EndsAt = round.StartedAt.Value.AddSeconds(30);
+        round.StartedAt = DateTimeOffset.UtcNow;
+        round.EndsAt = round.StartedAt.Value.AddSeconds(29);
         round.State = RoundState.Playing;
 
         var preview = await _deezer.GetPreviewUrlById(round.Song.DeezerId);
@@ -230,13 +230,8 @@ public class GameEngineService
         
         var guessScore = CalculateGuessScore(guess, round.Song.Name);
         var player = room.Players.First(p => p.Id == playerId);
-        
-        
-        Console.WriteLine(guess);
-        Console.WriteLine(round.Song.Name);
-        Console.WriteLine(guessScore);
 
-        if (guessScore > 93) // Correct
+        if (guessScore > 91)
         {
             var score = CalculateScore(round);
 
@@ -256,6 +251,9 @@ public class GameEngineService
                 );
             
             await BroadcastState(room, roomId);
+            
+            await _hub.Clients.Client(connectionId)
+                .SendAsync("CorrectGuess", round.Song.Name);
 
             if (round.PlayerScores.Count != room.Players.Count ||
                 round.State != RoundState.Playing) return;

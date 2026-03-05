@@ -10,7 +10,11 @@ builder.Services.AddScoped<SpotifyService>();
 builder.Services.AddScoped<GameEngineService>();
 builder.Services.AddHttpClient<DeezerService>();
 builder.Services
-    .AddSignalR()
+    .AddSignalR(options =>
+    {
+        options.KeepAliveInterval = TimeSpan.FromSeconds(30);
+        options.ClientTimeoutInterval = TimeSpan.FromSeconds(90);
+    })
     .AddJsonProtocol(options =>
     {
         options.PayloadSerializerOptions.Converters.Add(
