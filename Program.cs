@@ -6,6 +6,7 @@ using GjettLataBackend.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<RoomManager>();
+builder.Services.AddHostedService<RoomCleanupService>();
 builder.Services.AddScoped<SpotifyService>();
 builder.Services.AddScoped<GameEngineService>();
 builder.Services.AddHttpClient<DeezerService>();

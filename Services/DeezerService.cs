@@ -60,6 +60,7 @@ public class DeezerService
             songs.Add(new Song
             {
                 Name = CleanTitle(track.title_short ?? track.title),
+                ArtistName = track.artist.name,
                 DeezerId = id
             });
         }
@@ -72,15 +73,14 @@ public class DeezerService
         if (string.IsNullOrWhiteSpace(title))
             return title;
 
-        // Remove parentheses and brackets content
         title = Regex.Replace(title, @"\s*[\(\[].*?[\)\]]", "");
 
-        // Remove dash suffixes like " - Remastered", " - Live", etc.
-        title = Regex.Replace(title, @"\s*-\s*(live|remaster(ed)?|acoustic|version).*?$",
+        title = Regex.Replace(title,
+            @"\s*-\s*.*\b(live|remaster(ed)?|acoustic|version)\b.*$",
             "", RegexOptions.IgnoreCase);
 
-        // Remove feat. without parentheses
-        title = Regex.Replace(title, @"\s*(feat\.?|ft\.?).*$",
+        title = Regex.Replace(title,
+            @"\s*\b(feat\.?|ft\.?)\b.*$",
             "", RegexOptions.IgnoreCase);
 
         return title.Trim();

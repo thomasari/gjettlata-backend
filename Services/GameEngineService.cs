@@ -239,7 +239,7 @@ public class GameEngineService
 
             player.Score += score;
             
-            var correctGuessMessage = new ChatMessage($"{player.Name} gjettet riktig!", player.Color);
+            var correctGuessMessage = new ChatMessage($"{player.Name} gjettet riktig! (+{score})", player.Color);
             room.ChatHistory.Add(correctGuessMessage);
             
             await _hub.Clients.Group(roomId)
@@ -253,7 +253,7 @@ public class GameEngineService
             await BroadcastState(room, roomId);
             
             await _hub.Clients.Client(connectionId)
-                .SendAsync("CorrectGuess", round.Song.Name);
+                .SendAsync("CorrectGuess", round.Song.Name, round.Song.ArtistName);
 
             if (round.PlayerScores.Count != room.Players.Count ||
                 round.State != RoundState.Playing) return;
@@ -298,8 +298,7 @@ public class GameEngineService
         var now = DateTimeOffset.UtcNow;
 
         var totalSeconds = 30.0;
-        var remainingSeconds =
-            Math.Max(0, (round.EndsAt!.Value - now).TotalSeconds);
+        var remainingSeconds = Math.Max(0, (round.EndsAt!.Value - now).TotalSeconds);
 
         var timeFactor = remainingSeconds / totalSeconds;
 
@@ -310,8 +309,35 @@ public class GameEngineService
 
         var rawScore = 100 * timeFactor * revealFactor;
 
-        return Math.Max(10, (int)Math.Round(rawScore));
+        var correctGuesses = round.PlayerScores.Count;
+        var placementFactor = 1.0 / (correctGuesses + 1);
+
+        var finalScore = rawScore * placementFactor;
+
+        return Math.Max(10, (int)Math.Round(finalScore));
     }
+    
+    /*     GAMMEL SCORE
+     *     private int CalculateScore(Round round)
+       {
+           var now = DateTimeOffset.UtcNow;
+
+           var totalSeconds = 30.0;
+           var remainingSeconds =
+               Math.Max(0, (round.EndsAt!.Value - now).TotalSeconds);
+
+           var timeFactor = remainingSeconds / totalSeconds;
+
+           var totalLetters = round.Song.Name.Count(char.IsLetterOrDigit);
+           var revealed = round.RevealedIndexes.Count;
+
+           var revealFactor = 1.0 - ((double)revealed / totalLetters);
+
+           var rawScore = 100 * timeFactor * revealFactor;
+
+           return Math.Max(10, (int)Math.Round(rawScore));
+       }
+     */
 
     private int CalculateGuessScore(string guess, string answer)
     {
@@ -367,10 +393,12 @@ public class GameEngineService
 
     public RoomDto ToDto(Room room)
     {
+        room.LastActivity = DateTimeOffset.UtcNow;
         return new RoomDto
         {
             Id = room.Id,
             Players = room.Players,
+            MaxPlayers = room.MaxPlayers,
             Host = room.Host,
             Game = room.CurrentGame == null ? null : new GameDto
             {

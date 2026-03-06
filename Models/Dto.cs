@@ -4,6 +4,7 @@ public class RoomDto
 {
     public string Id { get; set; }
     public List<Player> Players { get; set; }
+    public int MaxPlayers { get; set; }
     public Player? Host { get; set; }
     public GameDto? Game { get; set; }
 }

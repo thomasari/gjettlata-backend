@@ -29,7 +29,7 @@ public class RoomController : ControllerBase
     public async Task<IActionResult> Create()
     {
         var room = _rooms.CreateRoom();
-
+        
         return Ok(_engine.ToDto(room));
     }
 
@@ -56,6 +56,11 @@ public class RoomController : ControllerBase
         var room = _rooms.GetRoom(roomId);
         if (room == null) return NotFound();
 
+        if (room.Players.Count >= room.MaxPlayers)
+        {
+            return BadRequest();
+        }
+
         var player = new Player
         {
             Id = Guid.NewGuid().ToString(),
@@ -81,6 +86,32 @@ public class RoomController : ControllerBase
             newPlayer = player,
             room = _engine.ToDto(room)
         });
+    }
+    
+    /* ============================= */
+    /* LEAVE ROOM */
+    /* ============================= */
+
+    [HttpPost("{roomId}/leave")]
+    public async Task<IActionResult> Leave(string roomId, [FromBody] string playerId)
+    {
+        var room = _rooms.GetRoom(roomId);
+        if (room == null) return NotFound();
+
+        var player = room.Players.FirstOrDefault(p => p.Id == playerId);
+
+        if (player == null) return NotFound();
+        
+        var message = $"{player?.Name} forlot spillet";
+        
+        await _hub.Clients.All.SendAsync("ReceiveChat", player, message, true);
+        
+        room.Players.Remove(player);
+
+        await _hub.Clients.Group(roomId)
+            .SendAsync("RoomUpdate", _engine.ToDto(room));
+
+        return Ok();
     }
 
     /* ============================= */
@@ -152,10 +183,12 @@ public class RoomController : ControllerBase
         var totalRounds = room.CurrentGame.TotalRounds;
         var gameMode = room.CurrentGame.GameMode;
         
-        room.CurrentGame = new Game();
-        room.CurrentGame.TotalRounds = totalRounds;
-        room.CurrentGame.GameMode = gameMode;
-        
+        room.CurrentGame = new Game
+        {
+            TotalRounds = totalRounds,
+            GameMode = gameMode
+        };
+
         room.Players.ForEach(p => p.Score = 0);
         
         await _hub.Clients.Group(roomId)
