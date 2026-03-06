@@ -23,7 +23,7 @@ public class GameEngineService
         var countdown = RunCountdown(room, roomId);
         
         var songs = await _deezer.GetRandomSongs(
-            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.TotalRounds);
+            room.CurrentGame!.GameMode, room.CurrentGame.TotalRounds);
 
         await countdown;
         
@@ -41,7 +41,7 @@ public class GameEngineService
     public async Task RestartGame(Room room, string roomId)
     {
         var songs = await _deezer.GetRandomSongs(
-            room.CurrentGame!.GameMode.ToString(), room.CurrentGame.TotalRounds);
+            room.CurrentGame!.GameMode, room.CurrentGame.TotalRounds);
 
         
     }
@@ -196,6 +196,9 @@ public class GameEngineService
             "2...",
             "1..."
         };
+        
+        await _hub.Clients.Group(roomId)
+            .SendAsync("CorrectGuess", room.CurrentGame.CurrentRound.Song.Name, room.CurrentGame.CurrentRound.Song.ArtistName);
 
         foreach (var msg in messages)
         {

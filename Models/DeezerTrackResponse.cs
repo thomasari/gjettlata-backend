@@ -15,6 +15,11 @@ public class DeezerTrackResponse
     public DeezerArtist artist { get; set; }
 }
 
+public class DeezerPlaylistTracksResponse
+{
+    public List<DeezerTrackResponse> data { get; set; } = new();
+}
+
 public class DeezerArtist
 {
     public long id { get; set; }

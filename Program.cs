@@ -1,6 +1,7 @@
 
 using System.Text.Json.Serialization;
 using GjettLataBackend;
+using GjettLataBackend.Models;
 using GjettLataBackend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,5 +69,13 @@ app.UseCors();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<RoomHub>("/hub/room");
+app.MapGet("/gamemodes", () =>
+{
+    return Enum.GetValues<GameMode>()
+        .Select(x => new GameModeDto(
+            x.ToString(),
+            x.GetDisplayName()
+        ));
+});
 
 app.Run();

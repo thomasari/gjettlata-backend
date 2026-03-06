@@ -43,3 +43,5 @@ public class SongDto
     public DateTimeOffset? StartAt { get; set; }
     public DateTimeOffset? EndsAt { get; set; }
 }
+
+public record GameModeDto(string Value, string Label);

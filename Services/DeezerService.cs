@@ -34,38 +34,103 @@ public class DeezerService
     // PUBLIC API
     // ============================
 
-    public async Task<List<Song>> GetRandomSongs(string? genre, int count)
+    public async Task<List<Song>> GetRandomSongs(GameMode mode, int count)
     {
-        if (genre == null ||
-            !_songCache.TryGetValue(genre, out var ids) ||
-            ids.Count == 0)
-        {
-            return new();
-        }
 
-        var selectedIds = ids
-            .OrderBy(_ => Random.Shared.Next())
-            .Take(count)
-            .ToList();
-
+        List<long> ids;
         var songs = new List<Song>();
-
-        foreach (var id in selectedIds)
+        
+        switch (mode)
         {
-            var track = await GetTrack(id);
+            case GameMode.Seventies:
+            case GameMode.Eighties:
+            case GameMode.Nineties:
+            case GameMode.TwoThousands:
+            case GameMode.TwentyTens:
+            case GameMode.TwentyTwenties:
+            case GameMode.AllTime:
+                if (!_songCache.TryGetValue(mode.ToString(), out ids) ||
+                    ids.Count == 0)
+                {
+                    return new();
+                }
+                var selectedIds = ids
+                    .OrderBy(_ => Random.Shared.Next())
+                    .Take(count)
+                    .ToList();
 
-            if (track == null)
-                continue;
 
-            songs.Add(new Song
+                foreach (var id in selectedIds)
+                {
+                    var track = await GetTrack(id);
+
+                    if (track == null)
+                        continue;
+
+                    songs.Add(new Song
+                    {
+                        Name = CleanTitle(track.title_short ?? track.title),
+                        ArtistName = track.artist.name,
+                        DeezerId = id
+                    });
+                }
+                break;
+            case GameMode.TopNorway:
             {
-                Name = CleanTitle(track.title_short ?? track.title),
-                ArtistName = track.artist.name,
-                DeezerId = id
-            });
+                var id = GameModeExtensions.GetPlaylistIdForGamemode(mode);
+                var tracks = await GetPlaylist(id);
+
+                songs = tracks
+                    .OrderBy(_ => Random.Shared.Next())
+                    .Take(count)
+                    .Select(t => new Song
+                    {
+                        Name = CleanTitle(t.title_short ?? t.title),
+                        ArtistName = t.artist.name,
+                        DeezerId = t.id
+                    })
+                    .ToList();
+
+                break;
+            }
+
+            case GameMode.TopWorld:
+            {
+                var tracks = await GetPlaylist("3155776842");
+
+                songs = tracks
+                    .OrderBy(_ => Random.Shared.Next())
+                    .Take(count)
+                    .Select(t => new Song
+                    {
+                        Name = CleanTitle(t.title_short ?? t.title),
+                        ArtistName = t.artist.name,
+                        DeezerId = t.id
+                    })
+                    .ToList();
+
+                break;
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(mode), mode, null);
         }
+        
+
 
         return songs;
+    }
+
+    public async Task<List<DeezerTrackResponse>> GetPlaylist(string id)
+    {
+        var response = await _http.GetFromJsonAsync<DeezerPlaylistTracksResponse>(
+            $"playlist/{id}/tracks?limit=100");
+
+        if (response == null)
+            return new();
+
+        return response.data
+            .Where(t => !string.IsNullOrEmpty(t.preview))
+            .ToList();
     }
     
     private static string CleanTitle(string title)
