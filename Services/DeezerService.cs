@@ -76,27 +76,10 @@ public class DeezerService
                 }
                 break;
             case GameMode.TopNorway:
-            {
-                var id = GameModeExtensions.GetPlaylistIdForGamemode(mode);
-                var tracks = await GetPlaylist(id);
-
-                songs = tracks
-                    .OrderBy(_ => Random.Shared.Next())
-                    .Take(count)
-                    .Select(t => new Song
-                    {
-                        Name = CleanTitle(t.title_short ?? t.title),
-                        ArtistName = t.artist.name,
-                        DeezerId = t.id
-                    })
-                    .ToList();
-
-                break;
-            }
-
             case GameMode.TopWorld:
+            case GameMode.Russ:
             {
-                var tracks = await GetPlaylist("3155776842");
+                var tracks = await GetPlaylist(mode.GetPlaylistId());
 
                 songs = tracks
                     .OrderBy(_ => Random.Shared.Next())

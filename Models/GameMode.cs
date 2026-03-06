@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace GjettLataBackend.Models;
 
 using System.ComponentModel.DataAnnotations;
@@ -29,20 +31,20 @@ public enum GameMode
     TopNorway,
 
     [Display(Name = "Topp 100 verden", Description = "3155776842")]
-    TopWorld
+    TopWorld,
+    
+    [Display(Name = "Russelåter", Description = "7281487184")]
+    Russ
 }
+
+
 
 public static class GameModeExtensions
 {
-    public static string GetPlaylistIdForGamemode(GameMode gameMode)
+    public static string? GetPlaylistId(this GameMode mode)
     {
-        return gameMode switch
-        {
-            GameMode.Seventies or GameMode.Eighties or GameMode.Nineties or GameMode.TwoThousands or GameMode.TwentyTens
-                or GameMode.TwentyTwenties or GameMode.AllTime => "",
-            GameMode.TopNorway => "1313619885",
-            GameMode.TopWorld => "3155776842",
-            _ => ""
-        };
+        var member = typeof(GameMode).GetMember(mode.ToString()).FirstOrDefault();
+        var attr = member?.GetCustomAttribute<DisplayAttribute>();
+        return attr?.Description ?? "";
     }
 }
