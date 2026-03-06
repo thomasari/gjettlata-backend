@@ -78,6 +78,7 @@ public class DeezerService
             case GameMode.TopNorway:
             case GameMode.TopWorld:
             case GameMode.Russ:
+                case GameMode.Party4U:
             {
                 var tracks = await GetPlaylist(mode.GetPlaylistId());
 

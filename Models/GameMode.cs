@@ -34,7 +34,10 @@ public enum GameMode
     TopWorld,
     
     [Display(Name = "Russelåter", Description = "7281487184")]
-    Russ
+    Russ,
+    
+    [Display(Name = "Party4U", Description = "14710257021")]
+    Party4U
 }
 
 
