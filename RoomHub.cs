@@ -27,6 +27,18 @@ public class RoomHub : Hub
         await base.OnConnectedAsync();
     }
 
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        var roomId = Context.GetHttpContext()?.Request.Query["roomId"];
+
+        if (!string.IsNullOrEmpty(roomId))
+        {
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
+        }
+
+        await base.OnDisconnectedAsync(exception);
+    }
+
     public async Task JoinRoom(string roomId)
     {
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);

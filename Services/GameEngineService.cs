@@ -297,31 +297,6 @@ public class GameEngineService
     }
     
     private int CalculateScore(Round round)
-    {
-        var now = DateTimeOffset.UtcNow;
-
-        var totalSeconds = 30.0;
-        var remainingSeconds = Math.Max(0, (round.EndsAt!.Value - now).TotalSeconds);
-
-        var timeFactor = remainingSeconds / totalSeconds;
-
-        var totalLetters = round.Song.Name.Count(char.IsLetterOrDigit);
-        var revealed = round.RevealedIndexes.Count;
-
-        var revealFactor = 1.0 - ((double)revealed / totalLetters);
-
-        var rawScore = 100 * timeFactor * revealFactor;
-
-        var correctGuesses = round.PlayerScores.Count;
-        var placementFactor = 1.0 / (correctGuesses + 1);
-
-        var finalScore = rawScore * placementFactor;
-
-        return Math.Max(10, (int)Math.Round(finalScore));
-    }
-    
-    /*     GAMMEL SCORE
-     *     private int CalculateScore(Round round)
        {
            var now = DateTimeOffset.UtcNow;
 
@@ -340,7 +315,6 @@ public class GameEngineService
 
            return Math.Max(10, (int)Math.Round(rawScore));
        }
-     */
 
     private int CalculateGuessScore(string guess, string answer)
     {
